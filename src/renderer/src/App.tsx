@@ -675,6 +675,23 @@ function App(): React.JSX.Element {
     })
   }
 
+  // 环境检测：是否在 Electron 环境中
+  const isElectron = useMemo(() => !!window.api?.qclaw, [])
+
+  const callChatApi = async (payload: any) => {
+    if (isElectron) {
+      return window.api.qclaw.chat(payload)
+    } else {
+      // Vercel Web 环境调用
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      return response.json()
+    }
+  }
+
   const handleSendMessage = (message: string): void => {
     if (selectedConversationId === 'qclaw-tracker') {
       const userMessage: Message = {
@@ -700,8 +717,7 @@ function App(): React.JSX.Element {
 
       setTrackerMessages((current) => [...current, userMessage, thinkingMessage])
 
-      window.api.qclaw
-        .chat({
+      callChatApi({
           scenarioId: 'qclaw-tracker' as any,
           message,
           history: trackerMessages.map((m) => ({
@@ -758,8 +774,7 @@ function App(): React.JSX.Element {
       return [...current, userComment, thinkingComment]
     })
 
-    window.api.qclaw
-      .chat({
+    callChatApi({
         scenarioId,
         message: prompt.ask,
         history: threadComments.map((c) => ({
@@ -823,8 +838,7 @@ function App(): React.JSX.Element {
 
     setThreadComments((current) => [...current, userComment, thinkingComment])
 
-    window.api.qclaw
-      .chat({
+    callChatApi({
         scenarioId,
         message,
         history: threadComments.map((c) => ({
