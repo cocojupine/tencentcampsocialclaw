@@ -1,8 +1,9 @@
 {
   "version": 2,
   "framework": "vite",
+  "outputDirectory": "out/renderer",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/src/renderer/index.html" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
