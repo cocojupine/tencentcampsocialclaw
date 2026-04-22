@@ -51,7 +51,12 @@ export function ChatArea({
 }: ChatAreaProps): React.JSX.Element {
   return (
     <main className="flex min-w-0 flex-1 flex-col bg-[#f5f7fb]">
-      <ChatHeader conversation={conversation} scenario={activeScenario} />
+      <ChatHeader
+        conversation={conversation}
+        scenario={activeScenario}
+        showBackButton={threadOpen}
+        onBack={onResetScenario}
+      />
       <PinnedEntryBar
         visible={entryVisible}
         scenario={activeScenario}
