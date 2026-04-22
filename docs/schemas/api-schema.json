@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lobster.local/schemas/api-schema.json",
+  "title": "Lobster Mock BFF API Schema Bundle",
+  "type": "object",
+  "properties": {
+    "endpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "method", "path", "summary"],
+        "properties": {
+          "id": { "type": "string" },
+          "method": { "type": "string", "enum": ["GET", "POST"] },
+          "path": { "type": "string" },
+          "summary": { "type": "string" },
+          "requestBody": { "type": "object" },
+          "responseBody": { "type": "object" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "examples": {
+    "conversationList": {
+      "id": "getConversations",
+      "method": "GET",
+      "path": "/api/conversations",
+      "summary": "Future endpoint for fetching conversation list for the desktop shell.",
+      "responseBody": {
+        "conversations": [
+          {
+            "id": "otaku-group",
+            "name": "Otaku Budget Group",
+            "type": "group",
+            "preview": "Aman: Want to visit the merch stores this weekend?",
+            "lastMessageAt": "2026-04-22T12:30:00+08:00",
+            "unreadCount": 4,
+            "avatar": "https://example.com/avatar/group-1.png"
+          }
+        ]
+      }
+    },
+    "conversationMessages": {
+      "id": "getConversationMessages",
+      "method": "GET",
+      "path": "/api/conversations/:id/messages",
+      "summary": "Future endpoint for fetching message flow for a selected conversation.",
+      "responseBody": {
+        "messages": [
+          {
+            "id": "m1",
+            "conversationId": "otaku-group",
+            "senderId": "u1",
+            "senderName": "Aman",
+            "senderAvatar": "https://example.com/avatar/u1.png",
+            "content": "Anyone wants to split shipping for the maid acrylic stand set?",
+            "createdAt": "2026-04-22T12:10:00+08:00",
+            "kind": "text",
+            "isSelf": false
+          }
+        ]
+      }
+    },
+    "detectIntent": {
+      "id": "detectIntent",
+      "method": "POST",
+      "path": "/api/agent/detect-intent",
+      "summary": "Future endpoint for classifying whether a message contains a Lobster-worthy social signal.",
+      "requestBody": {
+        "conversationId": "otaku-group",
+        "messageId": "m1",
+        "triggerMode": "passive_intercept",
+        "messageText": "Anyone wants to watch Dune 2 together this weekend?",
+        "contextWindow": ["I kind of want to rewatch it.", "The IMAX showtime looks good."]
+      },
+      "responseBody": {
+        "intent": {
+          "id": "intent-001",
+          "sourceMessageId": "m1",
+          "triggerMode": "passive_intercept",
+          "intentType": "watch_party",
+          "confidence": 0.93,
+          "recommendedCardType": "open_card",
+          "entities": [
+            { "name": "title", "value": "Dune 2" },
+            { "name": "time_hint", "value": "weekend" }
+          ],
+          "reasoningSummary": "Detected a coordination signal for shared viewing."
+        }
+      }
+    },
+    "generateCard": {
+      "id": "generateCard",
+      "method": "POST",
+      "path": "/api/agent/generate-card",
+      "summary": "Future endpoint for generating a structured Lobster card using rules plus Aliyun LLM.",
+      "requestBody": {
+        "conversationId": "otaku-group",
+        "triggerMode": "proactive_summon",
+        "sourceMessageId": "m1",
+        "userPrompt": "Create a weekend watch party card for Dune 2.",
+        "contextWindow": [
+          "People in the group have been talking about Dune 2.",
+          "Several fictional personas want to find a time to go together."
+        ]
+      },
+      "responseBody": {
+        "card": {
+          "id": "card-001",
+          "conversationId": "otaku-group",
+          "templateId": "team-up-post",
+          "sourceMessageId": "m1",
+          "title": "Weekend Dune 2 Watch Party",
+          "description": "Two people look interested. Want to make it official?",
+          "status": "suggested",
+          "participants": [],
+          "capacity": {
+            "current": 2,
+            "total": 6
+          },
+          "metadata": {
+            "topic": "Dune 2",
+            "mockTarget": "tencent_video_watch_party"
+          },
+          "actions": [
+            {
+              "id": "join",
+              "label": "Count me in",
+              "actionType": "join",
+              "style": "primary"
+            }
+          ]
+        }
+      }
+    },
+    "cardAction": {
+      "id": "cardAction",
+      "method": "POST",
+      "path": "/api/cards/:id/actions",
+      "summary": "Future endpoint for applying a deterministic state transition to an existing card.",
+      "requestBody": {
+        "actionId": "join",
+        "actor": {
+          "id": "u_current",
+          "name": "Current User"
+        }
+      },
+      "responseBody": {
+        "card": {
+          "id": "card-001",
+          "status": "active"
+        }
+      }
+    }
+  },
+  "implementationNotes": [
+    "Current phase can run entirely from local JSON and in-memory state without any HTTP layer.",
+    "The API bundle here documents the future local BFF contract once the project outgrows the static narrative phase.",
+    "All card-generating endpoints should validate structured outputs against domain schema before returning to the client.",
+    "Aliyun LLM should be called only by the BFF adapter layer."
+  ]
+}

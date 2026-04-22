@@ -1,0 +1,208 @@
+{
+  "systemName": "Project Lobster Mock Client",
+  "version": "1.1.0",
+  "lastUpdated": "2026-04-22",
+  "status": "single-user-static-mock",
+  "productContext": {
+    "mode": "single-user-static-mock",
+    "goal": "Build a static and semi-interactive desktop prototype that demonstrates Lobster's agent-assisted group-chat resonance without integrating the real Tencent client or real-time backend services.",
+    "nonGoals": [
+      "Direct QQ or Tencent production API integration",
+      "Real payment or commerce flows",
+      "Real identity, OAuth, or account linking",
+      "Full backend persistence for production use",
+      "True multi-user synchronization in the current phase"
+    ]
+  },
+  "principles": [
+    "Current phase is a single-user narrative prototype with static messages and deterministic interactions.",
+    "Frontend uses local JSON or in-memory mock data in the current phase.",
+    "Frontend will talk only to Lobster BFF in the future LLM-enhanced phase, never directly to Aliyun LLM.",
+    "LLM handles intent understanding, slot extraction, card copy generation, and tool routing suggestions only after phase upgrade.",
+    "Business state mutations are deterministic operations, not LLM outputs.",
+    "Mock Tencent ecosystem actions are represented as adapters with simulated responses.",
+    "All agent interventions are opt-in and visible as explicit system artifacts."
+  ],
+  "architecture": {
+    "layers": [
+      {
+        "name": "Mock Desktop Client",
+        "responsibilities": [
+          "Render QQ-like desktop UI",
+          "Display static conversations, message flow, built-in cards, and scenario controls",
+          "Trigger local deterministic scenario transitions",
+          "Manage single-user local interaction state",
+          "Render local card state updates"
+        ],
+        "technology": ["Electron", "React", "Tailwind CSS"]
+      },
+      {
+        "name": "Local Mock Data Layer",
+        "responsibilities": [
+          "Provide static conversations, messages, and scenario fixtures",
+          "Provide the three built-in card templates",
+          "Drive deterministic state transitions for demo actions",
+          "Persist temporary local UI state if needed"
+        ],
+        "technology": ["JSON files", "TypeScript constants", "In-memory store"]
+      },
+      {
+        "name": "Aliyun LLM Adapter",
+        "status": "future",
+        "responsibilities": [
+          "Build prompts from structured payloads",
+          "Call the Aliyun Open Platform model endpoint",
+          "Parse and validate structured JSON outputs",
+          "Retry or fall back to templates on malformed model responses"
+        ],
+        "technology": ["Aliyun Open Platform SDK or HTTPS adapter", "JSON schema validation"]
+      },
+      {
+        "name": "Mock Fulfillment Adapters",
+        "status": "future-or-lightweight-local",
+        "responsibilities": [
+          "Simulate Tencent Video watch-party actions",
+          "Simulate game team-up deep links",
+          "Simulate merch tracking follow-up effects",
+          "Provide deterministic demo responses for card actions"
+        ],
+        "technology": ["Mock service modules"]
+      }
+    ]
+  },
+  "runtimeFlows": {
+    "passiveIntercept": [
+      "User views or triggers a predefined scenario message in the mock chat client.",
+      "Client local rule layer matches one of the three built-in PRD scenarios.",
+      "Client shows a private suggestion affordance only to the current user.",
+      "After confirmation, the corresponding built-in card is inserted into the public message flow.",
+      "Further interactions mutate local card state deterministically."
+    ],
+    "proactiveSummon": [
+      "User opens the agent entry point explicitly from the chat UI.",
+      "Client offers one of the three built-in card templates based on the chosen scenario.",
+      "User confirms the insertion.",
+      "Client inserts the card into MessageFlow or the reserved agent slot.",
+      "No LLM call occurs in the current phase."
+    ],
+    "cardAction": [
+      "User clicks a card action such as join, open spoiler thread, or mark interest.",
+      "Client applies a deterministic local state transition.",
+      "Client updates the card visual state and optional local event log.",
+      "Future phases may route the same action through a local BFF and mock fulfillment adapters."
+    ]
+  },
+  "apiGroups": [
+    {
+      "name": "conversation",
+      "endpoints": ["GET /api/conversations", "GET /api/conversations/:id/messages"]
+    },
+    {
+      "name": "agent",
+      "endpoints": ["POST /api/agent/detect-intent", "POST /api/agent/generate-card"]
+    },
+    {
+      "name": "cards",
+      "endpoints": [
+        "POST /api/cards",
+        "GET /api/cards/:id",
+        "GET /api/cards/:id/state",
+        "POST /api/cards/:id/actions"
+      ]
+    },
+    {
+      "name": "scenarios",
+      "endpoints": ["GET /api/scenarios", "POST /api/scenarios/run", "POST /api/scenarios/reset"]
+    },
+    {
+      "name": "analytics",
+      "endpoints": ["POST /api/events/track", "GET /api/analytics/summary"]
+    }
+  ],
+  "llmResponsibilities": {
+    "allowed": [
+      "Intent classification",
+      "Slot extraction",
+      "Card title and description generation",
+      "Action recommendation and internal tool routing suggestions"
+    ],
+    "forbidden": [
+      "Direct business state mutation",
+      "Unread count calculation",
+      "Membership updates",
+      "Conversation retrieval",
+      "Payment or transaction decisions",
+      "Direct client-side invocation"
+    ],
+    "contracts": {
+      "outputMode": "strict-json",
+      "validation": ["JSON parsing", "Schema validation", "Fallback template generation on failure"]
+    }
+  },
+  "storageModel": {
+    "recommendedPhase0": "JSON files or in-memory repository",
+    "recommendedPhase1": "Local HTTP mock service plus JSON-backed state",
+    "recommendedPhase2": "SQLite or lightweight document store for scenario state",
+    "mutableResources": [
+      "card instances",
+      "local card action logs",
+      "scenario run state",
+      "analytics events"
+    ]
+  },
+  "frontendModules": [
+    "layout",
+    "conversation",
+    "chat",
+    "agent-resonance",
+    "card-templates",
+    "scenario-panel",
+    "mock-data-adapter"
+  ],
+  "backendModules": [
+    "future-conversation-service",
+    "future-agent-service",
+    "future-card-service",
+    "future-scenario-service",
+    "future-analytics-service",
+    "future-aliyun-llm-adapter",
+    "future-mock-fulfillment-adapter"
+  ],
+  "phasePlan": {
+    "phase0": {
+      "name": "Single-user static narrative mock",
+      "includes": [
+        "Single current user",
+        "Static conversations and messages",
+        "Three built-in card templates",
+        "Scenario runner",
+        "Deterministic local card state transitions"
+      ]
+    },
+    "phase1": {
+      "name": "Aliyun-powered structured intelligence",
+      "includes": [
+        "Intent detection via Aliyun LLM",
+        "Slot extraction",
+        "Card copy generation",
+        "Tool routing suggestions"
+      ]
+    },
+    "phase2": {
+      "name": "Mock fulfillment orchestration",
+      "includes": [
+        "Watch-party mock adapter",
+        "Game team-up mock adapter",
+        "Merch follow-up adapter",
+        "Analytics dashboard"
+      ]
+    }
+  },
+  "builtInScenarioCards": ["team-up-post", "spoiler-thread-post", "merch-tracker-post"],
+  "openQuestions": [
+    "Whether passive intercept should run only on selected messages or also on outgoing draft text in the prototype.",
+    "Whether scenario state should reset per app launch or persist across sessions.",
+    "How much conversation context should be exposed to the Aliyun adapter in phase 1.",
+    "Whether fictional senders should be modeled only as message metadata or as lightweight personas."
+  ]
+}

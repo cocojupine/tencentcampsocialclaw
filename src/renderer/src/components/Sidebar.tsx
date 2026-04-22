@@ -38,6 +38,7 @@ export function Sidebar(): React.JSX.Element {
                   ? 'bg-white text-[#1d9bf0] shadow-[0_10px_20px_rgba(29,155,240,0.18)]'
                   : 'text-slate-700 hover:bg-white/80 hover:text-slate-900'
               ].join(' ')}
+              type="button"
             >
               <Icon className="h-5 w-5" strokeWidth={2} />
               {badge ? (
@@ -53,7 +54,10 @@ export function Sidebar(): React.JSX.Element {
         </nav>
       </div>
 
-      <button className="flex h-11 w-11 items-center justify-center rounded-2xl text-slate-700 transition hover:bg-white/80 hover:text-slate-900">
+      <button
+        className="flex h-11 w-11 items-center justify-center rounded-2xl text-slate-700 transition hover:bg-white/80 hover:text-slate-900"
+        type="button"
+      >
         <Settings className="h-5 w-5" strokeWidth={2} />
       </button>
     </aside>

@@ -1,7 +1,12 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
+import * as dotenv from 'dotenv'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import { runQClawChat, type QClawChatPayload } from './qclaw'
 import icon from '../../resources/icon.png?asset'
+
+// 必须在任何业务逻辑之前调用
+dotenv.config()
 
 function createWindow(): void {
   // Create the browser window.
@@ -39,6 +44,9 @@ function createWindow(): void {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  console.log('--- QClaw Main Process Started ---')
+  console.log('Environment loaded from .env')
+  
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
@@ -51,6 +59,27 @@ app.whenReady().then(() => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
+
+  ipcMain.handle('qclaw:chat', async (_event, payload: QClawChatPayload) => {
+    console.log('[IPC] qclaw:chat triggered', payload.scenarioId, payload.message)
+    try {
+      const response = await runQClawChat(payload)
+      console.log('[IPC] qclaw:chat response received:', response.slice(0, 50) + '...')
+      return { success: true, response }
+    } catch (error) {
+      console.error('[IPC] qclaw:chat error:', error)
+      return { success: false, error: (error as any).message || 'Unknown IPC error' }
+    }
+  })
+
+  ipcMain.handle('qclaw:getConfig', () => {
+    const hasApiKey = Boolean(process.env.DASHSCOPE_API_KEY)
+    return {
+      enabled: hasApiKey,
+      hasApiKey,
+      model: process.env.QCLAW_MODEL || 'qwen3.5-flash'
+    }
+  })
 
   createWindow()
 

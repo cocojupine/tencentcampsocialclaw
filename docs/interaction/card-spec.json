@@ -1,0 +1,205 @@
+{
+  "specName": "Lobster Built-in Post Card Spec",
+  "version": "1.0.0",
+  "lastUpdated": "2026-04-22",
+  "narrativeAnchor": "Lobster does not speak for the user. It gives a high-value sentence a container that can be seen, responded to, and safely followed.",
+  "productConsistencyRules": [
+    "Every card must originate from a concrete source message.",
+    "Every card is first suggested privately to the current user and becomes public only after confirmation.",
+    "Every card solves one social coordination problem only.",
+    "Cards behave like QQ-native enhanced posts, not like an external chatbot.",
+    "Cards must remain lightweight, dismissible, and non-blocking to the main message flow."
+  ],
+  "sharedInteractionModel": {
+    "visibilityStages": [
+      {
+        "stage": "private_suggestion",
+        "description": "Only the current user sees the suggestion affordance near the triggering message."
+      },
+      {
+        "stage": "public_inserted",
+        "description": "After confirmation, the card appears in the public message flow as a system-assisted post."
+      },
+      {
+        "stage": "state_updated",
+        "description": "Actions update card state deterministically without changing the original source message."
+      }
+    ],
+    "insertionRules": {
+      "defaultPlacement": "inline-after-source-message",
+      "maxCardsPerSourceMessage": 1,
+      "messageFlowBehavior": [
+        "Card insertion must not reorder surrounding messages.",
+        "Card width should read as a post attached to the message, not a full-screen takeover.",
+        "Collapsed state is preferred by default for dense message flows."
+      ]
+    },
+    "privacyRules": [
+      "Suggestion detection uses the current source message and minimal local context only.",
+      "No cross-conversation profiling is displayed to the user.",
+      "No auto-posting into the public chat without confirmation.",
+      "No payment, transaction, or account linking behavior is allowed."
+    ]
+  },
+  "cardTemplates": [
+    {
+      "id": "team-up-post",
+      "displayName": "Team-up Post",
+      "scenario": "wangzhe-missing-one",
+      "intent": "Turn a fleeting team-up shout into a structured joinable post.",
+      "sourceMessagePattern": [
+        "wangzhe missing one",
+        "need one more jungle",
+        "anyone free to queue tonight"
+      ],
+      "visualTone": {
+        "mood": "fast, energetic, lightweight",
+        "emphasis": "capacity and quick join"
+      },
+      "fields": [
+        "title",
+        "subtitle",
+        "gameLabel",
+        "slotSummary",
+        "capacity.current",
+        "capacity.total",
+        "roleSlots",
+        "statusText"
+      ],
+      "states": ["suggested", "active", "full", "expired"],
+      "actions": [
+        {
+          "id": "join_team",
+          "label": "Join",
+          "effect": "Increment filled slots and show current user as joined."
+        },
+        {
+          "id": "remind_me_team",
+          "label": "Remind Me",
+          "effect": "Mark the card as followed by the current user."
+        },
+        {
+          "id": "close_team_post",
+          "label": "Close Post",
+          "effect": "Move card into expired state."
+        }
+      ],
+      "uxNotes": [
+        "This is the best opening demo because QQ users can understand it instantly.",
+        "Keep the interaction focused on quick response rather than detailed game stats.",
+        "Show visible progress so the user feels the shout has become actionable."
+      ]
+    },
+    {
+      "id": "spoiler-thread-post",
+      "displayName": "Spoiler Thread Post",
+      "scenario": "spoiler-chat-post",
+      "intent": "Move potentially disruptive spoiler discussion into a safe side thread without killing the conversation.",
+      "sourceMessagePattern": ["no spoilers", "not safe to discuss here", "the later plot is wild"],
+      "visualTone": {
+        "mood": "protective, bounded, respectful",
+        "emphasis": "boundary and safe discussion space"
+      },
+      "fields": [
+        "title",
+        "subtitle",
+        "topicLabel",
+        "spoilerWarning",
+        "threadSummary",
+        "participantCount",
+        "statusText"
+      ],
+      "states": ["suggested", "open", "muted", "closed"],
+      "actions": [
+        {
+          "id": "open_thread",
+          "label": "Enter Thread",
+          "effect": "Reveal or navigate to the spoiler-safe discussion layer."
+        },
+        {
+          "id": "mute_thread",
+          "label": "Hide Spoilers",
+          "effect": "Collapse the post for the current user."
+        },
+        {
+          "id": "close_thread",
+          "label": "Close Discussion",
+          "effect": "Mark the post as closed."
+        }
+      ],
+      "uxNotes": [
+        "This post should feel like a respectful diversion, not moderation punishment.",
+        "The main group sees an entry point, not the spoiler content itself.",
+        "This template carries the strongest PRD narrative about reshaping chat space."
+      ]
+    },
+    {
+      "id": "merch-tracker-post",
+      "displayName": "Merch Tracker Post",
+      "scenario": "merch-tracker-post",
+      "intent": "Turn scattered merch interest into a visible trend without becoming a transaction tool.",
+      "sourceMessagePattern": [
+        "anyone wants to split merch",
+        "who wants this set",
+        "let me count interest first"
+      ],
+      "visualTone": {
+        "mood": "calm, organized, community-driven",
+        "emphasis": "interest aggregation and follow-up"
+      },
+      "fields": [
+        "title",
+        "subtitle",
+        "itemLabel",
+        "interestCount",
+        "targetCount",
+        "progressPercent",
+        "statusText"
+      ],
+      "states": ["suggested", "tracking", "threshold_reached", "closed"],
+      "actions": [
+        {
+          "id": "mark_interested",
+          "label": "Interested",
+          "effect": "Increment interest count and mark current user as following."
+        },
+        {
+          "id": "remind_when_ready",
+          "label": "Notify Me",
+          "effect": "Mark the current user as a watcher."
+        },
+        {
+          "id": "view_tracker_detail",
+          "label": "View Detail",
+          "effect": "Expand the post to show trend details and notes."
+        }
+      ],
+      "uxNotes": [
+        "The post must never look like a built-in commerce or payment flow.",
+        "It should communicate trend visibility rather than transaction authority.",
+        "Use progress as a social signal, not as an order funnel."
+      ]
+    }
+  ],
+  "copyGuidelines": {
+    "preferredTone": ["helpful", "lightweight", "native to QQ group chat", "non-judgmental"],
+    "avoid": [
+      "detected intent wording",
+      "surveillance-like explanations",
+      "overly technical AI phrasing",
+      "overly pushy CTA copy"
+    ],
+    "examples": {
+      "good": [
+        "Want to turn this into a team-up post?",
+        "I can move this into a spoiler thread.",
+        "Want to pin a tracker post for interest first?"
+      ],
+      "bad": [
+        "Detected a team-up intent.",
+        "The system has inferred a merch purchase plan.",
+        "AI has automatically created a discussion thread."
+      ]
+    }
+  }
+}

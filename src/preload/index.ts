@@ -1,12 +1,39 @@
 import { contextBridge } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
-// Custom APIs for renderer
-const api = {}
+type QClawHistoryItem = {
+  author: string
+  role: 'user' | 'qclaw' | 'system'
+  content: string
+}
 
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
+type QClawPayload = {
+  scenarioId: 'team-up' | 'spoiler-thread' | 'standee-group-buy'
+  message: string
+  history: QClawHistoryItem[]
+}
+
+type QClawResult = {
+  success: boolean
+  response?: string
+  error?: string
+}
+
+type QClawConfigResult = {
+  enabled: boolean
+  hasApiKey: boolean
+  model: string
+}
+
+const qclawApi = {
+  chat: (payload: QClawPayload): Promise<QClawResult> =>
+    electronAPI.ipcRenderer.invoke('qclaw:chat', payload),
+  getConfig: (): Promise<QClawConfigResult> =>
+    electronAPI.ipcRenderer.invoke('qclaw:getConfig')
+}
+
+const api = { qclaw: qclawApi }
+
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)

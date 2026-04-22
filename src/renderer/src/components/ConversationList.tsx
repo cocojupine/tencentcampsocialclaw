@@ -46,11 +46,14 @@ export function ConversationList({
                 onClick={() => onSelectConversation(conversation.id)}
                 type="button"
               >
-                <img
-                  alt={conversation.name}
-                  className="h-12 w-12 rounded-full object-cover shadow-sm"
-                  src={conversation.avatar}
-                />
+                <div
+                  className={[
+                    'flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold shadow-sm',
+                    active ? 'bg-white/20 text-white' : 'bg-[#eef2f7] text-[#1d9bf0]'
+                  ].join(' ')}
+                >
+                  {conversation.name.slice(0, 1)}
+                </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-3">
                     <p className="truncate text-[16px] font-semibold">{conversation.name}</p>
@@ -73,7 +76,9 @@ export function ConversationList({
                       {conversation.preview}
                     </p>
                     {conversation.muted ? (
-                      <VolumeX className={active ? 'h-4 w-4 text-white/85' : 'h-4 w-4 text-slate-300'} />
+                      <VolumeX
+                        className={active ? 'h-4 w-4 text-white/85' : 'h-4 w-4 text-slate-300'}
+                      />
                     ) : null}
                     {conversation.unreadCount > 0 ? (
                       <span

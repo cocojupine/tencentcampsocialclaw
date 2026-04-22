@@ -1,21 +1,86 @@
 import { ChatHeader } from './ChatHeader'
 import { MessageFlow } from './MessageFlow'
 import { MessageInputArea } from './MessageInputArea'
-import type { Conversation, Message } from '../../types/chat'
+import { PinnedEntryBar } from './PinnedEntryBar'
+import { ThreadWorkspace } from './ThreadWorkspace'
+import type {
+  AgentCard,
+  AgentCardAction,
+  Conversation,
+  Scenario,
+  ScenarioId,
+  ThreadComment
+} from '../../types/chat'
 
 type ChatAreaProps = {
   conversation: Conversation
-  messages: Message[]
+  activeScenario: Scenario
+  activeCard: AgentCard
+  privateSuggestionVisible: boolean
+  entryVisible: boolean
+  threadOpen: boolean
+  threadComments: ThreadComment[]
+  scenarioTabs: Array<{ id: ScenarioId; name: string }>
+  onConfirmSuggestion: () => void
+  onDismissSuggestion: () => void
+  onCardAction: (actionId: AgentCardAction) => void
+  onOpenPinnedEntry: () => void
+  onRunQClawPrompt: (promptId: string) => void
+  onSendThreadMessage: (message: string) => void
+  onSelectScenario: (scenarioId: ScenarioId) => void
+  onResetScenario: () => void
 }
 
-export function ChatArea({ conversation, messages }: ChatAreaProps): React.JSX.Element {
+export function ChatArea({
+  conversation,
+  activeScenario,
+  activeCard,
+  privateSuggestionVisible,
+  entryVisible,
+  threadOpen,
+  threadComments,
+  scenarioTabs,
+  onConfirmSuggestion,
+  onDismissSuggestion,
+  onCardAction,
+  onOpenPinnedEntry,
+  onRunQClawPrompt,
+  onSendThreadMessage,
+  onSelectScenario,
+  onResetScenario
+}: ChatAreaProps): React.JSX.Element {
   return (
     <main className="flex min-w-0 flex-1 flex-col bg-[#f5f7fb]">
-      <ChatHeader conversation={conversation} />
-      {/* AgentWidgetArea: reserved slot for future agent resonance widgets and inline orchestration surfaces. */}
-      <div className="h-0 shrink-0 overflow-hidden" aria-hidden="true" />
-      <MessageFlow messages={messages} />
-      <MessageInputArea />
+      <ChatHeader conversation={conversation} scenario={activeScenario} />
+      <PinnedEntryBar
+        visible={entryVisible}
+        scenario={activeScenario}
+        card={activeCard}
+        threadOpen={threadOpen}
+        onOpen={onOpenPinnedEntry}
+      />
+      <ThreadWorkspace
+        visible={threadOpen}
+        scenario={activeScenario}
+        card={activeCard}
+        comments={threadComments}
+        onCardAction={onCardAction}
+        onRunQClawPrompt={onRunQClawPrompt}
+        onSendThreadMessage={onSendThreadMessage}
+      />
+      <MessageFlow
+        messages={activeScenario.messages}
+        suggestion={activeScenario.suggestion}
+        privateSuggestionVisible={privateSuggestionVisible}
+        onConfirmSuggestion={onConfirmSuggestion}
+        onDismissSuggestion={onDismissSuggestion}
+      />
+      <MessageInputArea
+        activeScenarioId={activeScenario.id}
+        scenarios={scenarioTabs}
+        onSelectScenario={onSelectScenario}
+        onResetScenario={onResetScenario}
+      />
     </main>
   )
 }

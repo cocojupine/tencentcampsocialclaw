@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lobster.local/schemas/domain-schema.json",
+  "title": "Lobster Domain Schema Bundle",
+  "type": "object",
+  "properties": {
+    "CurrentUser": {
+      "type": "object",
+      "required": ["id", "displayName", "avatar"],
+      "properties": {
+        "id": { "type": "string" },
+        "displayName": { "type": "string" },
+        "avatar": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "Conversation": {
+      "type": "object",
+      "required": ["id", "name", "type", "preview", "lastMessageAt", "unreadCount", "avatar"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["direct", "group", "channel"] },
+        "preview": { "type": "string" },
+        "lastMessageAt": { "type": "string", "format": "date-time" },
+        "unreadCount": { "type": "integer", "minimum": 0 },
+        "avatar": { "type": "string" },
+        "isPinned": { "type": "boolean" },
+        "isMuted": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "Persona": {
+      "type": "object",
+      "required": ["id", "name", "avatar"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "avatar": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "Message": {
+      "type": "object",
+      "required": [
+        "id",
+        "conversationId",
+        "senderId",
+        "senderName",
+        "content",
+        "createdAt",
+        "kind",
+        "isSelf"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "conversationId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderAvatar": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "kind": { "type": "string", "enum": ["text", "file", "system", "agent-card"] },
+        "isSelf": { "type": "boolean" },
+        "replyToMessageId": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "PrivateSuggestion": {
+      "type": "object",
+      "required": ["id", "sourceMessageId", "cardTemplate", "headline", "visibility"],
+      "properties": {
+        "id": { "type": "string" },
+        "sourceMessageId": { "type": "string" },
+        "cardTemplate": {
+          "type": "string",
+          "enum": ["team-up-post", "spoiler-thread-post", "merch-tracker-post"]
+        },
+        "headline": { "type": "string" },
+        "body": { "type": "string" },
+        "visibility": { "type": "string", "const": "self-only" }
+      },
+      "additionalProperties": false
+    },
+    "CardAction": {
+      "type": "object",
+      "required": ["id", "label", "actionType"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string" },
+        "actionType": {
+          "type": "string",
+          "enum": [
+            "join",
+            "follow",
+            "remind_me",
+            "open_thread",
+            "mute_thread",
+            "view_detail",
+            "dismiss",
+            "close"
+          ]
+        },
+        "style": { "type": "string", "enum": ["primary", "secondary", "ghost"] },
+        "requiresConfirmation": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "CardInstance": {
+      "type": "object",
+      "required": [
+        "id",
+        "conversationId",
+        "templateId",
+        "sourceMessageId",
+        "title",
+        "description",
+        "status",
+        "actions"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "conversationId": { "type": "string" },
+        "templateId": {
+          "type": "string",
+          "enum": ["team-up-post", "spoiler-thread-post", "merch-tracker-post"]
+        },
+        "sourceMessageId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": [
+            "suggested",
+            "active",
+            "full",
+            "expired",
+            "open",
+            "muted",
+            "closed",
+            "tracking",
+            "threshold_reached"
+          ]
+        },
+        "participants": {
+          "type": "array",
+          "items": { "$ref": "#/properties/Persona" }
+        },
+        "capacity": {
+          "type": "object",
+          "properties": {
+            "current": { "type": "integer", "minimum": 0 },
+            "total": { "type": "integer", "minimum": 1 }
+          },
+          "additionalProperties": false
+        },
+        "metadata": {
+          "type": "object",
+          "properties": {
+            "topic": { "type": "string" },
+            "itemLabel": { "type": "string" },
+            "spoilerScope": { "type": "string" },
+            "mockTarget": { "type": "string" }
+          },
+          "additionalProperties": true
+        },
+        "actions": {
+          "type": "array",
+          "items": { "$ref": "#/properties/CardAction" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ScenarioPreset": {
+      "type": "object",
+      "required": ["id", "name", "description", "conversationId", "events"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "conversationId": { "type": "string" },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "append_message",
+                  "show_private_suggestion",
+                  "create_card",
+                  "mutate_card",
+                  "track_event"
+                ]
+              },
+              "payload": { "type": "object" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
