@@ -43,8 +43,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       extra_body: { enable_thinking: true }
     } as any)
 
-    const content = completion.choices[0]?.message?.content || ''
-    return res.status(200).json({ success: true, response: content.trim() })
+    const messageObj = completion.choices[0]?.message as any
+    const content = messageObj?.content || ''
+    const reasoning = messageObj?.reasoning_content || ''
+
+    let finalResponse = content.trim()
+    if (!finalResponse && reasoning) {
+      finalResponse = `[思考中...] ${reasoning}`
+    }
+
+    return res.status(200).json({
+      success: true,
+      response: finalResponse || '我先记下来了。'
+    })
   } catch (error: any) {
     return res.status(500).json({ success: false, error: error.message })
   }
