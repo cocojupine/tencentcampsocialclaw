@@ -1,5 +1,6 @@
 import { MoreHorizontal } from 'lucide-react'
 import { PrivateSuggestionCard } from './PrivateSuggestionCard'
+import { AgentPostCard } from './AgentPostCard'
 import type { Message, PrivateSuggestion } from '../../types/chat'
 
 type MessageFlowProps = {
@@ -73,6 +74,12 @@ export function MessageFlow({
                 >
                   {message.content}
                 </div>
+
+                {message.card && (
+                  <div className="mt-2 w-full min-w-[320px]">
+                    <AgentPostCard card={message.card} onAction={() => {}} compact />
+                  </div>
+                )}
               </div>
 
               {message.isSelf ? (

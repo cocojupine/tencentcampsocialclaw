@@ -27,6 +27,7 @@ type ChatAreaProps = {
   onOpenPinnedEntry: () => void
   onRunQClawPrompt: (promptId: string) => void
   onSendThreadMessage: (message: string) => void
+  onSendMessage: (message: string) => void
   onSelectScenario: (scenarioId: ScenarioId) => void
   onResetScenario: () => void
 }
@@ -46,6 +47,7 @@ export function ChatArea({
   onOpenPinnedEntry,
   onRunQClawPrompt,
   onSendThreadMessage,
+  onSendMessage,
   onSelectScenario,
   onResetScenario
 }: ChatAreaProps): React.JSX.Element {
@@ -85,6 +87,7 @@ export function ChatArea({
         scenarios={scenarioTabs}
         onSelectScenario={onSelectScenario}
         onResetScenario={onResetScenario}
+        onSendMessage={onSendMessage}
       />
     </main>
   )

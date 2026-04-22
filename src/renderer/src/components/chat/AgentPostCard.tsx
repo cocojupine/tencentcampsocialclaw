@@ -31,6 +31,7 @@ export function AgentPostCard({
   compact = false
 }: AgentPostCardProps): React.JSX.Element {
   const Icon = iconMap[card.templateId]
+  const isSubscribed = card.actions.some((action) => action.id === 'subscribe')
 
   return (
     <div
@@ -62,8 +63,10 @@ export function AgentPostCard({
               <p className="mt-1 text-sm text-slate-500">{card.metaLabel}</p>
             </div>
           </div>
-          <div className="rounded-full bg-slate-50 px-3 py-1 text-xs font-medium text-slate-500">
-            {card.statusText}
+          <div className="flex flex-col items-end gap-2">
+            <div className="rounded-full bg-slate-50 px-3 py-1 text-xs font-medium text-slate-500">
+              {card.statusText}
+            </div>
           </div>
         </div>
 
@@ -102,28 +105,42 @@ export function AgentPostCard({
           </div>
         ) : null}
 
-        <div className="mt-5 flex flex-wrap items-center gap-2">
+        <div className="mt-4 flex flex-wrap gap-2">
+          {!isSubscribed && (
+            <button
+              className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#1d9bf0]/30 bg-[#f0f7ff] px-4 py-2 text-sm font-semibold text-[#1d9bf0] transition hover:bg-[#e0efff]"
+              onClick={() => onAction('subscribe')}
+              type="button"
+            >
+              <Bell className="h-4 w-4" />
+              订阅到 QClaw
+            </button>
+          )}
           {card.actions.map((action) => (
             <button
               key={action.id}
               className={[
-                'rounded-full px-4 py-2 text-sm font-semibold transition',
+                'inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition',
                 action.style === 'primary'
                   ? 'bg-[#1d9bf0] text-white hover:bg-[#148be0]'
                   : action.style === 'secondary'
-                    ? 'bg-[#eef5ff] text-[#1d9bf0] hover:bg-[#deedff]'
-                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700'
+                    ? 'border border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700'
+                    : 'text-slate-400 hover:text-slate-600'
               ].join(' ')}
               onClick={() => onAction(action.id)}
               type="button"
             >
-              {action.style === 'secondary' && action.id.includes('remind') ? (
-                <Bell className="mr-1 inline h-4 w-4" />
-              ) : null}
               {action.label}
             </button>
           ))}
         </div>
+
+        {card.note ? (
+          <div className="mt-4 rounded-2xl bg-[#f7f9fc] p-4 text-sm text-slate-500">
+            <span className="font-semibold text-slate-700">龙虾提示：</span>
+            {card.note}
+          </div>
+        ) : null}
       </div>
     </div>
   )

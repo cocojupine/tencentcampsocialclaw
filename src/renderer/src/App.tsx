@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import dayjs from 'dayjs'
 import { ConversationList } from './components/ConversationList'
 import { Sidebar } from './components/Sidebar'
 import { ChatArea } from './components/chat/ChatArea'
@@ -6,6 +7,8 @@ import type {
   AgentCard,
   AgentCardAction,
   Conversation,
+  Message,
+  QClawTrackedCard,
   Scenario,
   ScenarioId,
   ThreadComment
@@ -18,8 +21,7 @@ const conversations: Conversation[] = [
     preview: '洪老师：附件 2 已经放群文件，记得今晚前提交报名表。',
     time: '10:26',
     unreadCount: 0,
-    avatar:
-      'https://images.unsplash.com/photo-1545239351-1141bd82e8a6?auto=format&fit=crop&w=120&q=80',
+    avatar: '工',
     muted: true
   },
   {
@@ -28,8 +30,7 @@ const conversations: Conversation[] = [
     preview: '阿满：今晚先挂王者缺一，后面还有剧透贴和立牌拼团贴。',
     time: '22:41',
     unreadCount: 4,
-    avatar:
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=120&q=80',
+    avatar: '二',
     description: '围绕周边、游戏、番剧和线下活动的长期群聊。',
     active: true
   },
@@ -39,8 +40,7 @@ const conversations: Conversation[] = [
     preview: '彩立方：限定徽章已经开预订了，谁来做个统计？',
     time: '22:14',
     unreadCount: 1,
-    avatar:
-      'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80'
+    avatar: '川'
   },
   {
     id: 'music-club',
@@ -48,8 +48,7 @@ const conversations: Conversation[] = [
     preview: '青苔草圆：周五 LIVE 场贩准备抢哪一套？',
     time: '21:45',
     unreadCount: 0,
-    avatar:
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80'
+    avatar: '梶'
   },
   {
     id: 'weekend-plan',
@@ -57,8 +56,7 @@ const conversations: Conversation[] = [
     preview: '不想加班：天气好的话要不要去看展然后吃火锅。',
     time: '20:18',
     unreadCount: 2,
-    avatar:
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80'
+    avatar: '周'
   }
 ]
 
@@ -447,12 +445,85 @@ function App(): React.JSX.Element {
   const [threadComments, setThreadComments] = useState<ThreadComment[]>(() =>
     cloneThreadComments(scenarioMap['team-up'].thread.comments)
   )
+  const [qclawTrackedCards, setQClawTrackedCards] = useState<QClawTrackedCard[]>([])
+  const [trackerMessages, setTrackerMessages] = useState<Message[]>([]) // 新增：追踪中心的消息流状态
 
-  const selectedConversation =
-    conversations.find((conversation) => conversation.id === selectedConversationId) ??
-    conversations[0]
+  const selectedConversation = useMemo(() => {
+    if (selectedConversationId === 'qclaw-tracker') {
+      return {
+        id: 'qclaw-tracker',
+        name: 'QClaw 追踪中心',
+        preview: '追踪你订阅的卡片信息',
+        time: '',
+        unreadCount: 0,
+        avatar: 'Q',
+        description: '你订阅的卡片信息将在这里聚合展示。',
+        active: true
+      }
+    }
+    return conversations.find((conversation) => conversation.id === selectedConversationId) ?? conversations[0]
+  }, [selectedConversationId, conversations])
 
-  const activeScenario = useMemo(() => scenarioMap[scenarioId], [scenarioId])
+  const activeScenario = useMemo(() => {
+    if (selectedConversationId === 'qclaw-tracker') {
+      // 为 QClaw 追踪中心创建一个虚拟的 Scenario
+      return {
+        id: 'qclaw-tracker' as ScenarioId,
+        name: 'QClaw 追踪中心',
+        triggerLine: '你订阅的卡片信息将在这里聚合展示。',
+        summary: '聚合追踪卡片',
+        messages: [
+          ...qclawTrackedCards.map((trackedCard) => ({
+            id: trackedCard.id,
+            senderId: 'qclaw',
+            sender: 'QClaw',
+            avatar: 'Q',
+            content: `正在追踪来自 [${
+              conversations.find((c) => c.id === trackedCard.conversationId)?.name || '未知群聊'
+            }] 的卡片：`,
+            time: dayjs(trackedCard.subscribedAt).format('HH:mm'),
+            isSelf: false,
+            card: trackedCard.card
+          })),
+          ...trackerMessages
+        ],
+        suggestion: {
+          id: 'qclaw-s1',
+          sourceMessageId: '',
+          title: 'QClaw 提示',
+          body: '这里展示你订阅的卡片信息。',
+          confirmLabel: '好的',
+          dismissLabel: '关闭'
+        },
+        card: {
+          id: 'qclaw-card',
+          templateId: 'team-up-post', // 可以是任意一个模板，这里只是为了结构完整
+          sourceMessageId: '',
+          title: 'QClaw 追踪中心',
+          description: '你订阅的卡片信息将在这里聚合展示。',
+          statusText: `${qclawTrackedCards.length} 张卡片`,
+          status: 'active',
+          accent: 'from-blue-500 via-indigo-500 to-purple-400',
+          badge: '追踪',
+          metaLabel: '实时更新',
+          actions: []
+        },
+        thread: {
+          title: 'QClaw 追踪中心',
+          subtitle: '你订阅的卡片信息将在这里聚合展示。',
+          statusPill: '追踪中',
+          entry: {
+            label: '追踪中心',
+            summary: '你订阅的卡片信息将在这里聚合展示。',
+            pill: '追踪'
+          },
+          comments: [],
+          qclawPrompts: []
+        }
+      }
+    }
+    return scenarioMap[scenarioId]
+  }, [scenarioId, selectedConversationId, qclawTrackedCards])
 
   useEffect(() => {
     setPrivateSuggestionVisible(true)
@@ -460,7 +531,7 @@ function App(): React.JSX.Element {
     setThreadOpen(false)
     setActiveCard(cloneCard(activeScenario.card))
     setThreadComments(cloneThreadComments(activeScenario.thread.comments))
-  }, [activeScenario])
+  }, [selectedConversationId, scenarioId])
 
   const handleResetScenario = (): void => {
     setPrivateSuggestionVisible(true)
@@ -586,8 +657,75 @@ function App(): React.JSX.Element {
         }
       }
 
+      if (actionId === 'subscribe') {
+        setQClawTrackedCards((currentCards) => {
+          const newCard: QClawTrackedCard = {
+            id: current.id,
+            conversationId: selectedConversationId,
+            scenarioId: scenarioId,
+            card: { ...current, actions: current.actions.filter((a) => a.id !== 'subscribe') }, // 移除订阅按钮
+            subscribedAt: new Date().toISOString()
+          }
+          return [...currentCards, newCard]
+        })
+        return { ...current, actions: current.actions.filter((a) => a.id !== 'subscribe') }
+      }
+
       return current
     })
+  }
+
+  const handleSendMessage = (message: string): void => {
+    if (selectedConversationId === 'qclaw-tracker') {
+      const userMessage: Message = {
+        id: `tracker-user-${Date.now()}`,
+        senderId: 'user',
+        sender: '我',
+        avatar: '我',
+        content: message,
+        time: dayjs().format('HH:mm'),
+        isSelf: true
+      }
+
+      const thinkingMessageId = `tracker-qclaw-${Date.now()}`
+      const thinkingMessage: Message = {
+        id: thinkingMessageId,
+        senderId: 'qclaw',
+        sender: 'QClaw',
+        avatar: 'Q',
+        content: '正在分析追踪数据...',
+        time: dayjs().format('HH:mm'),
+        isSelf: false
+      }
+
+      setTrackerMessages((current) => [...current, userMessage, thinkingMessage])
+
+      window.api.qclaw
+        .chat({
+          scenarioId: 'qclaw-tracker' as any,
+          message,
+          history: trackerMessages.map((m) => ({
+            author: m.sender,
+            role: m.isSelf ? 'user' : 'qclaw',
+            content: m.content
+          })),
+          trackedCards: qclawTrackedCards
+        })
+        .then((result) => {
+          setTrackerMessages((current) =>
+            current.map((m) =>
+              m.id === thinkingMessageId
+                ? { ...m, content: result.success ? result.response ?? '完成' : `错误: ${result.error}` }
+                : m
+            )
+          )
+        })
+        .catch((err) => {
+          setTrackerMessages((current) =>
+            current.map((m) => (m.id === thinkingMessageId ? { ...m, content: `错误: ${err.message}` } : m))
+          )
+        })
+    }
   }
 
   const handleSelectPinnedEntry = (): void => {
@@ -628,7 +766,8 @@ function App(): React.JSX.Element {
           author: c.author,
           role: c.role,
           content: c.content
-        }))
+        })),
+        trackedCards: scenarioId === ('qclaw-tracker' as any) ? qclawTrackedCards : undefined
       })
       .then((result) => {
         setThreadComments((current) =>
@@ -692,7 +831,8 @@ function App(): React.JSX.Element {
           author: c.author,
           role: c.role,
           content: c.content
-        }))
+        })),
+        trackedCards: scenarioId === ('qclaw-tracker' as any) ? qclawTrackedCards : undefined
       })
       .then((result) => {
         setThreadComments((current) =>
@@ -723,6 +863,7 @@ function App(): React.JSX.Element {
           conversations={conversations}
           selectedConversationId={selectedConversationId}
           onSelectConversation={setSelectedConversationId}
+          qclawSubscriptionCount={qclawTrackedCards.length}
         />
         <ChatArea
           conversation={selectedConversation}
@@ -739,6 +880,7 @@ function App(): React.JSX.Element {
           onOpenPinnedEntry={handleSelectPinnedEntry}
           onRunQClawPrompt={handleRunQClawPrompt}
           onSendThreadMessage={handleSendThreadMessage}
+          onSendMessage={handleSendMessage}
           onSelectScenario={setScenarioId}
           onResetScenario={handleResetScenario}
         />

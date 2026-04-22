@@ -1,3 +1,4 @@
+import { useState, KeyboardEvent } from 'react'
 import {
   FolderClosed,
   Image,
@@ -18,14 +19,31 @@ type MessageInputAreaProps = {
   scenarios: Array<{ id: ScenarioId; name: string }>
   onSelectScenario: (scenarioId: ScenarioId) => void
   onResetScenario: () => void
+  onSendMessage: (message: string) => void
 }
 
 export function MessageInputArea({
   activeScenarioId,
   scenarios,
   onSelectScenario,
-  onResetScenario
+  onResetScenario,
+  onSendMessage
 }: MessageInputAreaProps): React.JSX.Element {
+  const [text, setText] = useState('')
+
+  const handleSend = (): void => {
+    if (!text.trim()) return
+    onSendMessage(text)
+    setText('')
+  }
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>): void => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
+
   return (
     <section className="h-[208px] shrink-0 border-t border-[#e7ebf3] bg-white px-8 py-4">
       <div className="mx-auto flex h-full max-w-5xl flex-col">
@@ -61,12 +79,20 @@ export function MessageInputArea({
 
         <div className="mt-3 flex min-h-0 flex-1 gap-4">
           <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
             className="min-h-0 flex-1 resize-none rounded-2xl border border-transparent bg-[#f7f9fc] px-4 py-3 text-[15px] leading-7 text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#bfdbfe] focus:bg-white focus:shadow-[0_0_0_4px_rgba(59,130,246,0.12)]"
-            placeholder="当前是静态原型：输入区仅用于还原 QQ 桌面端心智，不发送真实消息。"
+            placeholder={
+              activeScenarioId === ('qclaw-tracker' as any)
+                ? '在追踪中心直接向 QClaw 提问...'
+                : '当前是静态原型：输入区仅用于还原 QQ 桌面端心智，不发送真实消息。'
+            }
           />
 
           <div className="flex w-[128px] shrink-0 items-end justify-end">
             <button
+              onClick={handleSend}
               className="inline-flex h-11 items-center gap-2 rounded-2xl bg-[#1d9bf0] px-5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(29,155,240,0.24)] transition hover:bg-[#148be0]"
               type="button"
             >

@@ -18,6 +18,7 @@ export type Message = {
   content: string
   time: string
   isSelf: boolean
+  card?: AgentCard // 新增：消息可以携带一个卡片
 }
 
 export type ScenarioId = 'team-up' | 'spoiler-thread' | 'standee-group-buy'
@@ -43,6 +44,7 @@ export type AgentCardAction =
   | 'mark_interested'
   | 'remind_group_buy'
   | 'view_tracker'
+  | 'subscribe'
 
 export type AgentCard = {
   id: string
@@ -90,6 +92,14 @@ export type QClawPrompt = {
   label: string
   ask: string
   response: string
+}
+
+export type QClawTrackedCard = {
+  id: string
+  conversationId: string
+  scenarioId: ScenarioId
+  card: AgentCard
+  subscribedAt: string
 }
 
 export type ScenarioThread = {

@@ -1,20 +1,24 @@
-import { Plus, Search, VolumeX } from 'lucide-react'
+import { Plus, Search, Sparkles, VolumeX } from 'lucide-react'
 import type { Conversation } from '../types/chat'
 
 type ConversationListProps = {
   conversations: Conversation[]
   selectedConversationId: string
   onSelectConversation: (conversationId: string) => void
+  qclawSubscriptionCount?: number
 }
 
 export function ConversationList({
   conversations,
   selectedConversationId,
-  onSelectConversation
+  onSelectConversation,
+  qclawSubscriptionCount = 0
 }: ConversationListProps): React.JSX.Element {
+  const isQClawSelected = selectedConversationId === 'qclaw-tracker'
+
   return (
     <section className="flex w-[300px] min-w-[300px] flex-col border-r border-[#eef1f6] bg-[#f8fafc]">
-      <div className="border-b border-[#eef1f6] px-5 pb-4 pt-5">
+      <div className="px-5 pb-4 pt-5">
         <div className="flex items-center gap-3">
           <label className="group flex h-10 flex-1 items-center gap-2 rounded-2xl border border-transparent bg-[#eef2f7] px-3 text-sm text-slate-500 transition focus-within:border-[#b6d8ff] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(59,130,246,0.12)]">
             <Search className="h-4 w-4 text-slate-400" />
@@ -23,13 +27,63 @@ export function ConversationList({
               placeholder="搜索"
             />
           </label>
-          <button className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#eef2f7] text-slate-500 transition hover:bg-[#e4e9f1] hover:text-slate-700">
+          <button
+            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#eef2f7] text-slate-500 transition hover:bg-[#e4e9f1] hover:text-slate-700"
+            type="button"
+          >
             <Plus className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-2 py-3">
+      <div className="px-2 pb-2">
+        <button
+          className={[
+            'flex w-full items-center gap-3 rounded-[20px] px-3 py-3 text-left transition-all duration-200',
+            isQClawSelected
+              ? 'bg-[#1d9bf0] text-white shadow-[0_12px_24px_rgba(29,155,240,0.22)]'
+              : 'bg-white hover:bg-slate-50 border border-slate-100'
+          ].join(' ')}
+          onClick={() => onSelectConversation('qclaw-tracker')}
+          type="button"
+        >
+          <div
+            className={[
+              'flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold shadow-sm',
+              isQClawSelected
+                ? 'bg-white/20 text-white'
+                : 'bg-gradient-to-br from-sky-400 to-blue-600 text-white'
+            ].join(' ')}
+          >
+            <Sparkles className="h-6 w-6" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-3">
+              <p className="truncate text-[16px] font-bold">QClaw 追踪中心</p>
+              {qclawSubscriptionCount > 0 && (
+                <span
+                  className={[
+                    'min-w-[20px] rounded-full px-1.5 text-center text-[11px] font-bold leading-5',
+                    isQClawSelected ? 'bg-white text-[#1d9bf0]' : 'bg-[#1d9bf0] text-white'
+                  ].join(' ')}
+                >
+                  {qclawSubscriptionCount}
+                </span>
+              )}
+            </div>
+            <p
+              className={[
+                'truncate text-xs mt-0.5',
+                isQClawSelected ? 'text-white/80' : 'text-slate-400'
+              ].join(' ')}
+            >
+              聚合追踪已订阅的卡片信息
+            </p>
+          </div>
+        </button>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-2 py-1">
         <div className="space-y-1">
           {conversations.map((conversation) => {
             const active = conversation.id === selectedConversationId
@@ -52,7 +106,7 @@ export function ConversationList({
                     active ? 'bg-white/20 text-white' : 'bg-[#eef2f7] text-[#1d9bf0]'
                   ].join(' ')}
                 >
-                  {conversation.name.slice(0, 1)}
+                  {conversation.avatar}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-3">

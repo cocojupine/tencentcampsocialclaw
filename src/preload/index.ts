@@ -11,6 +11,7 @@ type QClawPayload = {
   scenarioId: 'team-up' | 'spoiler-thread' | 'standee-group-buy'
   message: string
   history: QClawHistoryItem[]
+  trackedCards?: any[]
 }
 
 type QClawResult = {

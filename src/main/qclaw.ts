@@ -2,14 +2,17 @@ import OpenAI from 'openai'
 
 type QClawScenarioId = 'team-up' | 'spoiler-thread' | 'standee-group-buy'
 
+export type QClawHistoryItem = {
+  author: string
+  role: 'user' | 'qclaw' | 'system'
+  content: string
+}
+
 export type QClawChatPayload = {
   scenarioId: QClawScenarioId
   message: string
-  history: Array<{
-    author: string
-    role: 'user' | 'qclaw' | 'system'
-    content: string
-  }>
+  history: QClawHistoryItem[]
+  trackedCards?: any[] // 新增：传递订阅的卡片信息给 LLM
 }
 
 type QClawRuntimeConfig = {
@@ -80,7 +83,15 @@ export async function runQClawChat(payload: QClawChatPayload): Promise<string> {
           '你是QQ群助手QClaw。',
           '口吻自然、极其简短。',
           '只答贴内内容，不编造。',
-          buildScenarioInstruction(payload.scenarioId)
+          payload.scenarioId === ('qclaw-tracker' as any)
+            ? `当前在追踪中心。用户订阅了以下卡片：${JSON.stringify(
+                payload.trackedCards?.map((tc) => ({
+                  title: tc.card.title,
+                  status: tc.card.statusText,
+                  desc: tc.card.description
+                }))
+              )}。请基于这些卡片回答。`
+            : buildScenarioInstruction(payload.scenarioId)
         ].join(' ')
       },
       // 只取最近 3 条历史，极大减少上下文开销
