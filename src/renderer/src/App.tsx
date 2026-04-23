@@ -65,7 +65,7 @@ const scenarioMap: Record<ScenarioId, Scenario> = {
     id: 'team-up',
     name: '王者缺一',
     triggerLine: '先挂顶栏入口，再进入贴内组队讨论。',
-    summary: '把一句“缺一”变成一个可加入、可追踪的组队入口。',
+    summary: '把一句"缺一"变成一个可加入、可追踪的组队入口。',
     messages: [
       {
         id: 'team-m1',
@@ -93,7 +93,7 @@ const scenarioMap: Record<ScenarioId, Scenario> = {
         sender: '我',
         avatar:
           'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=120&q=80',
-        content: '要不我挂个“王者缺一”入口，看到的人直接点进去补位就行。',
+        content: '要不我挂个"王者缺一"入口，看到的人直接点进去补位就行。',
         time: '21:40',
         isSelf: true
       }
@@ -345,7 +345,7 @@ const scenarioMap: Record<ScenarioId, Scenario> = {
         { id: 'remind_group_buy', label: '成团提醒', style: 'secondary' },
         { id: 'view_tracker', label: '查看进度', style: 'ghost' }
       ],
-      note: '把“想买”从一句话变成可追踪的公共结构。'
+      note: '把"想买"从一句话变成可追踪的公共结构。'
     },
     thread: {
       title: '角色立牌拼团追踪',
@@ -446,7 +446,7 @@ function App(): React.JSX.Element {
     cloneThreadComments(scenarioMap['team-up'].thread.comments)
   )
   const [qclawTrackedCards, setQClawTrackedCards] = useState<QClawTrackedCard[]>([])
-  const [trackerMessages, setTrackerMessages] = useState<Message[]>([]) // 新增：追踪中心的消息流状态
+  const [trackerMessages, setTrackerMessages] = useState<Message[]>([])
 
   const selectedConversation = useMemo(() => {
     if (selectedConversationId === 'qclaw-tracker') {
@@ -466,7 +466,6 @@ function App(): React.JSX.Element {
 
   const activeScenario = useMemo(() => {
     if (selectedConversationId === 'qclaw-tracker') {
-      // 为 QClaw 追踪中心创建一个虚拟的 Scenario
       return {
         id: 'qclaw-tracker' as ScenarioId,
         name: 'QClaw 追踪中心',
@@ -497,7 +496,7 @@ function App(): React.JSX.Element {
         },
         card: {
           id: 'qclaw-card',
-          templateId: 'team-up-post', // 可以是任意一个模板，这里只是为了结构完整
+          templateId: 'team-up-post',
           sourceMessageId: '',
           title: 'QClaw 追踪中心',
           description: '你订阅的卡片信息将在这里聚合展示。',
@@ -663,7 +662,7 @@ function App(): React.JSX.Element {
             id: current.id,
             conversationId: selectedConversationId,
             scenarioId: scenarioId,
-            card: { ...current, actions: current.actions.filter((a) => a.id !== 'subscribe') }, // 移除订阅按钮
+            card: { ...current, actions: current.actions.filter((a) => a.id !== 'subscribe') },
             subscribedAt: new Date().toISOString()
           }
           return [...currentCards, newCard]
@@ -675,14 +674,24 @@ function App(): React.JSX.Element {
     })
   }
 
-  // 环境检测：是否在 Electron 环境中
   const isElectron = useMemo(() => !!window.api?.qclaw, [])
 
-  const callChatApi = async (payload: any) => {
+  const callChatApi = async (payload: any, onToken?: (token: string) => void) => {
     if (isElectron) {
+      if (onToken) {
+        const requestId = Date.now().toString()
+        const removeListener = window.api.qclaw.onToken(requestId, (token) => {
+          onToken(token)
+        })
+        try {
+          const result = await window.api.qclaw.chat({ ...payload, stream: true, requestId })
+          return result
+        } finally {
+          removeListener()
+        }
+      }
       return window.api.qclaw.chat(payload)
     } else {
-      // Vercel Web 环境调用
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -717,7 +726,8 @@ function App(): React.JSX.Element {
 
       setTrackerMessages((current) => [...current, userMessage, thinkingMessage])
 
-      callChatApi({
+      callChatApi(
+        {
           scenarioId: 'qclaw-tracker' as any,
           message,
           history: trackerMessages.map((m) => ({
@@ -726,12 +736,25 @@ function App(): React.JSX.Element {
             content: m.content
           })),
           trackedCards: qclawTrackedCards
-        })
+        },
+        (token) => {
+          setTrackerMessages((current) =>
+            current.map((m) =>
+              m.id === thinkingMessageId
+                ? { ...m, content: m.content === '正在分析追踪数据...' ? token : m.content + token }
+                : m
+            )
+          )
+        }
+      )
         .then((result) => {
           setTrackerMessages((current) =>
             current.map((m) =>
               m.id === thinkingMessageId
-                ? { ...m, content: result.success ? result.response ?? '完成' : `错误: ${result.error}` }
+                ? {
+                    ...m,
+                    content: result.success ? (m.content === '正在分析追踪数据...' ? '完成' : m.content) : `错误: ${result.error}`
+                  }
                 : m
             )
           )
@@ -774,7 +797,8 @@ function App(): React.JSX.Element {
       return [...current, userComment, thinkingComment]
     })
 
-    callChatApi({
+    callChatApi(
+      {
         scenarioId,
         message: prompt.ask,
         history: threadComments.map((c) => ({
@@ -783,7 +807,17 @@ function App(): React.JSX.Element {
           content: c.content
         })),
         trackedCards: scenarioId === ('qclaw-tracker' as any) ? qclawTrackedCards : undefined
-      })
+      },
+      (token) => {
+        setThreadComments((current) =>
+          current.map((c) =>
+            c.id === `${promptId}-reply`
+              ? { ...c, content: c.content === 'QClaw 正在思考...' ? token : c.content + token }
+              : c
+          )
+        )
+      }
+    )
       .then((result) => {
         setThreadComments((current) =>
           current.map((c) =>
@@ -791,7 +825,7 @@ function App(): React.JSX.Element {
               ? {
                   ...c,
                   content: result.success
-                    ? (result.response ?? prompt.response)
+                    ? (c.content === 'QClaw 正在思考...' ? (result.response ?? prompt.response) : c.content)
                     : `调用失败: ${result.error}`
                 }
               : c
@@ -838,7 +872,8 @@ function App(): React.JSX.Element {
 
     setThreadComments((current) => [...current, userComment, thinkingComment])
 
-    callChatApi({
+    callChatApi(
+      {
         scenarioId,
         message,
         history: threadComments.map((c) => ({
@@ -847,7 +882,17 @@ function App(): React.JSX.Element {
           content: c.content
         })),
         trackedCards: scenarioId === ('qclaw-tracker' as any) ? qclawTrackedCards : undefined
-      })
+      },
+      (token) => {
+        setThreadComments((current) =>
+          current.map((c) =>
+            c.id === qClawCommentId
+              ? { ...c, content: c.content === 'QClaw 正在思考...' ? token : c.content + token }
+              : c
+          )
+        )
+      }
+    )
       .then((result) => {
         setThreadComments((current) =>
           current.map((c) =>
@@ -855,7 +900,7 @@ function App(): React.JSX.Element {
               ? {
                   ...c,
                   content: result.success
-                    ? (result.response ?? buildManualQclawReply(scenarioId, message))
+                    ? (c.content === 'QClaw 正在思考...' ? (result.response ?? buildManualQclawReply(scenarioId, message)) : c.content)
                     : `调用失败: ${result.error}`
                 }
               : c

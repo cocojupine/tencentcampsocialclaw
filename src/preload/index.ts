@@ -12,6 +12,8 @@ type QClawPayload = {
   message: string
   history: QClawHistoryItem[]
   trackedCards?: any[]
+  stream?: boolean
+  requestId?: string
 }
 
 type QClawResult = {
@@ -26,11 +28,24 @@ type QClawConfigResult = {
   model: string
 }
 
-const qclawApi = {
+type TokenCallback = (token: string) => void
+
+type QClawApi = {
+  chat: (payload: QClawPayload) => Promise<QClawResult>
+  getConfig: () => Promise<QClawConfigResult>
+  onToken: (requestId: string, callback: TokenCallback) => () => void
+}
+
+const qclawApi: QClawApi = {
   chat: (payload: QClawPayload): Promise<QClawResult> =>
     electronAPI.ipcRenderer.invoke('qclaw:chat', payload),
   getConfig: (): Promise<QClawConfigResult> =>
-    electronAPI.ipcRenderer.invoke('qclaw:getConfig')
+    electronAPI.ipcRenderer.invoke('qclaw:getConfig'),
+  onToken: (requestId: string, callback: TokenCallback) => {
+    const handler = (_event: any, token: string) => callback(token)
+    electronAPI.ipcRenderer.on(`qclaw:token:${requestId}`, handler)
+    return () => electronAPI.ipcRenderer.removeListener(`qclaw:token:${requestId}`, handler)
+  }
 }
 
 const api = { qclaw: qclawApi }
