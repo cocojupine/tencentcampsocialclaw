@@ -55,7 +55,7 @@ export function getQClawConfig(): QClawRuntimeConfig {
     enabled: hasApiKey,
     hasApiKey,
     model: process.env.QCLAW_MODEL || 'qwen3.5-flash',
-    enableThinking: toBoolean(process.env.QCLAW_ENABLE_THINKING, true),
+    enableThinking: toBoolean(process.env.QCLAW_ENABLE_THINKING, false),
     temperature: toNumber(process.env.QCLAW_TEMPERATURE, 0.7), // 略微调高温度，提升发散性
     topP: toNumber(process.env.QCLAW_TOP_P, 0.8),
     maxTokens: toNumber(process.env.QCLAW_MAX_TOKENS, 300) // 缩短最大输出长度
