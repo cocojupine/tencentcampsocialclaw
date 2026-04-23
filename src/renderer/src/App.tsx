@@ -523,7 +523,7 @@ function App(): React.JSX.Element {
       }
     }
     return scenarioMap[scenarioId]
-  }, [scenarioId, selectedConversationId, qclawTrackedCards])
+  }, [scenarioId, selectedConversationId, qclawTrackedCards, trackerMessages])
 
   useEffect(() => {
     setPrivateSuggestionVisible(true)
